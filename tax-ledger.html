@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Income Tax Ledger — New Regime Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --deep:#131F33;
+    --deep2:#1B2C48;
+    --paper:#FBF6E8;
+    --paper-dim:#F3EBD6;
+    --line:#D9CBA2;
+    --ink:#20293A;
+    --ink-soft:#5B6473;
+    --brass:#A2791F;
+    --brass-bright:#C79A33;
+    --teal:#2E6A66;
+    --rust:#A5432A;
+    --ok:#2E6A66;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, #1E3050 0%, var(--deep) 55%, #0F1928 100%);
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+    padding:24px 14px 60px;
+    min-height:100vh;
+  }
+  .shell{max-width:760px;margin:0 auto;}
+  header{
+    text-align:center;
+    color:var(--paper);
+    margin-bottom:18px;
+    position:relative;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    font-size:11.5px;
+    color:var(--brass-bright);
+    margin-bottom:6px;
+  }
+  h1{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:clamp(26px,6vw,36px);
+    margin:0 0 6px;
+    letter-spacing:-.01em;
+  }
+  header p{
+    font-size:14px;
+    color:#C7CEDD;
+    max-width:480px;
+    margin:0 auto;
+    line-height:1.5;
+  }
+  .scenario-row{display:flex;justify-content:center;margin:18px 0 22px;}
+  #scenarioBtn{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    font-weight:600;
+    letter-spacing:.03em;
+    background:var(--brass-bright);
+    color:#241A05;
+    border:none;
+    padding:11px 20px;
+    border-radius:999px;
+    cursor:pointer;
+    box-shadow:0 6px 18px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.4);
+    transition:transform .15s ease;
+  }
+  #scenarioBtn:active{transform:scale(.96);}
+  .grid{display:grid;grid-template-columns:1fr;gap:16px;}
+  @media(min-width:760px){
+    .grid{grid-template-columns:1fr 1.1fr;align-items:start;}
+  }
+  .card{
+    background:var(--paper);
+    border-radius:14px;
+    padding:20px 18px 22px;
+    box-shadow:0 18px 40px -14px rgba(0,0,0,.5);
+    position:relative;
+    overflow:hidden;
+  }
+  .card::before{
+    content:"";
+    position:absolute;left:0;top:0;bottom:0;width:6px;
+    background:repeating-linear-gradient(180deg, var(--rust) 0 10px, transparent 10px 20px);
+    opacity:.55;
+  }
+  .card h2{
+    font-family:'Fraunces',serif;
+    font-size:17px;
+    font-weight:600;
+    margin:0 0 14px;
+    padding-left:6px;
+    color:var(--ink);
+  }
+  .field{margin-bottom:18px;padding-left:6px;}
+  .field:last-child{margin-bottom:2px;}
+  .field-top{
+    display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:5px;
+  }
+  .field-top label{font-size:13.5px;font-weight:600;color:var(--ink);}
+  .field-top .amt{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13.5px;font-weight:600;color:var(--brass);
+    white-space:nowrap;
+  }
+  input[type=range]{
+    width:100%;height:6px;border-radius:4px;
+    -webkit-appearance:none;appearance:none;
+    background:var(--line);outline:none;margin:6px 0 4px;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:20px;height:20px;border-radius:50%;
+    background:var(--brass-bright);border:3px solid var(--paper);
+    box-shadow:0 0 0 1px var(--brass), 0 3px 8px rgba(0,0,0,.35);
+    cursor:pointer;
+  }
+  input[type=range]::-moz-range-thumb{
+    width:20px;height:20px;border-radius:50%;
+    background:var(--brass-bright);border:3px solid var(--paper);
+    box-shadow:0 0 0 1px var(--brass), 0 3px 8px rgba(0,0,0,.35);
+    cursor:pointer;
+  }
+  .micro{font-size:11.5px;color:var(--ink-soft);line-height:1.4;}
+  .num-row{display:flex;gap:6px;margin-top:6px;}
+  .num-row input[type=text]{
+    flex:1;font-family:'IBM Plex Mono',monospace;font-size:12.5px;
+    border:1px solid var(--line);border-radius:8px;padding:6px 8px;
+    background:#fff;color:var(--ink);
+  }
+  .notice{
+    font-size:12px;
+    background:#FBEADB;
+    border:1px solid #E7C48F;
+    color:#7A4C10;
+    border-radius:8px;
+    padding:7px 10px;
+    margin-top:6px;
+    display:none;
+    line-height:1.4;
+  }
+  .notice.show{display:block;}
+  .results h2{margin-bottom:10px;}
+  .stat{
+    padding:12px 6px 14px;
+    border-bottom:1px dashed var(--line);
+  }
+  .stat:last-of-type{border-bottom:none;}
+  .stat-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;}
+  .stat-label{font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);}
+  .stat-value{
+    font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:22px;color:var(--ink);
+  }
+  .stat-value.tax{color:var(--rust);}
+  .stat-value.zero{color:var(--ok);}
+  .formula{font-size:12px;color:var(--ink-soft);margin-top:4px;line-height:1.5;}
+  .formula b{color:var(--ink);}
+  .seal{
+    position:absolute;top:14px;right:14px;width:64px;height:64px;
+    display:flex;align-items:center;justify-content:center;
+    transform:rotate(-8deg);
+    transition:transform .35s ease;
+  }
+  .seal svg{width:100%;height:100%;}
+  .chart-wrap{margin-top:8px;}
+  .chart-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin:14px 0 8px 6px;}
+  svg text{font-family:'IBM Plex Mono',monospace;}
+  .reflect{
+    margin-top:16px;
+    background:linear-gradient(135deg, var(--deep2), var(--deep));
+    border-radius:14px;
+    padding:18px 20px;
+    color:var(--paper);
+    box-shadow:0 18px 40px -14px rgba(0,0,0,.5);
+  }
+  .reflect .eyebrow{color:var(--brass-bright);margin-bottom:8px;}
+  .reflect p{margin:0;font-size:14.5px;line-height:1.55;font-family:'Fraunces',serif;font-weight:500;}
+  footer{
+    text-align:center;color:#8B93A6;font-size:11.5px;margin-top:20px;line-height:1.6;
+  }
+  footer a{color:#B7BFD1;}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header>
+    <div class="eyebrow">Taxation · Individual Income Tax</div>
+    <h1>The Income Tax Ledger</h1>
+    <p>Move the sliders to build a taxpayer's year. Watch Total Income, Deductions and Tax payable under the <b>New Regime</b> update live — with the exact formula behind each number.</p>
+  </header>
+
+  <div class="scenario-row">
+    <button id="scenarioBtn">🇮🇳 Try this scenario: fresh BBA graduate, first job</button>
+  </div>
+
+  <div class="grid">
+    <!-- INPUTS -->
+    <div class="card inputs">
+      <h2>1 · Build the income</h2>
+
+      <div class="field">
+        <div class="field-top"><label>Salary Income</label><span class="amt" id="salaryAmt"></span></div>
+        <input type="range" id="salary" min="0" max="4000000" step="5000" value="800000">
+        <div class="micro">Basic + DA + special allowances, before any exemptions.</div>
+        <div class="num-row"><input type="text" id="salaryNum" inputmode="numeric"></div>
+        <div class="notice" id="salaryNotice"></div>
+      </div>
+
+      <div class="field">
+        <div class="field-top"><label>House Property Income</label><span class="amt" id="hpAmt"></span></div>
+        <input type="range" id="hp" min="-200000" max="1500000" step="5000" value="-80000">
+        <div class="micro">Rent received, minus home‑loan interest. Goes negative if interest &gt; rent (a "loss").</div>
+        <div class="num-row"><input type="text" id="hpNum" inputmode="numeric"></div>
+        <div class="notice" id="hpNotice"></div>
+      </div>
+
+      <div class="field">
+        <div class="field-top"><label>Capital Gains</label><span class="amt" id="cgAmt"></span></div>
+        <input type="range" id="cg" min="0" max="3000000" step="5000" value="50000">
+        <div class="micro">Profit from selling shares, mutual funds, property, etc.</div>
+        <div class="num-row"><input type="text" id="cgNum" inputmode="numeric"></div>
+        <div class="notice" id="cgNotice"></div>
+      </div>
+
+      <div class="field">
+        <div class="field-top"><label>Other Sources</label><span class="amt" id="osAmt"></span></div>
+        <input type="range" id="os" min="0" max="1500000" step="5000" value="20000">
+        <div class="micro">Bank interest, dividends, family pension, etc.</div>
+        <div class="num-row"><input type="text" id="osNum" inputmode="numeric"></div>
+        <div class="notice" id="osNotice"></div>
+      </div>
+
+      <div class="field">
+        <div class="field-top"><label>Taxable Allowances &amp; Perquisites</label><span class="amt" id="apAmt"></span></div>
+        <input type="range" id="ap" min="0" max="1000000" step="5000" value="60000">
+        <div class="micro">Car, rent‑free house, ESOPs etc. — the portion that isn't exempt. Counted with salary.</div>
+        <div class="num-row"><input type="text" id="apNum" inputmode="numeric"></div>
+        <div class="notice" id="apNotice"></div>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="card results">
+      <div class="seal" id="seal"></div>
+      <h2>2 · See the ledger close</h2>
+
+      <div class="stat">
+        <div class="stat-top"><span class="stat-label">Total Income</span><span class="stat-value" id="totalIncome"></span></div>
+        <div class="formula" id="totalIncomeFormula"></div>
+      </div>
+
+      <div class="stat">
+        <div class="stat-top"><span class="stat-label">Deductions (New Regime)</span><span class="stat-value" id="deduction"></span></div>
+        <div class="formula" id="deductionFormula"></div>
+      </div>
+
+      <div class="stat">
+        <div class="stat-top"><span class="stat-label">Net Taxable Income</span><span class="stat-value" id="netTaxable"></span></div>
+        <div class="formula" id="netTaxableFormula"></div>
+      </div>
+
+      <div class="stat">
+        <div class="stat-top"><span class="stat-label">Tax Payable (incl. 4% cess)</span><span class="stat-value tax" id="taxPayable"></span></div>
+        <div class="formula" id="taxFormula"></div>
+      </div>
+
+      <div class="notice" id="globalNotice" style="margin:10px 6px 0;"></div>
+
+      <div class="chart-wrap">
+        <div class="chart-title">Where the income comes from</div>
+        <svg id="compChart" viewBox="0 0 320 150"></svg>
+        <div class="chart-title">Tax vs. take‑home</div>
+        <svg id="taxChart" viewBox="0 0 320 60"></svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="reflect">
+    <div class="eyebrow">Now interpret it</div>
+    <p id="reflectQ"></p>
+  </div>
+
+  <footer>
+    Simplified for classroom use — new regime FY 2025‑26 slabs, ₹75,000 standard deduction, Section&nbsp;87A rebate up to ₹12,00,000.<br>
+    Capital gains are shown at slab rates here for simplicity; in reality most gains are taxed at special flat rates.
+  </footer>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const HARD_CAP = 100000000; // 10 crore, absolute ceiling for any single field
+const fields = {
+  salary:{min:0,max:4000000,el:$('salary'),num:$('salaryNum'),amt:$('salaryAmt'),notice:$('salaryNotice')},
+  hp:{min:-200000,max:1500000,el:$('hp'),num:$('hpNum'),amt:$('hpAmt'),notice:$('hpNotice')},
+  cg:{min:0,max:3000000,el:$('cg'),num:$('cgNum'),amt:$('cgAmt'),notice:$('cgNotice')},
+  os:{min:0,max:1500000,el:$('os'),num:$('osNum'),amt:$('osAmt'),notice:$('osNotice')},
+  ap:{min:0,max:1000000,el:$('ap'),num:$('apNum'),amt:$('apAmt'),notice:$('apNotice')},
+};
+
+function fmt(n){
+  n = Math.round(n);
+  const neg = n<0;
+  n = Math.abs(n);
+  let s = '₹' + n.toLocaleString('en-IN',{maximumFractionDigits:0});
+  return (neg?'-':'')+s;
+}
+function clampSafe(v,min,max){
+  if(!isFinite(v) || isNaN(v)) return 0;
+  return Math.min(Math.max(v,min),max);
+}
+
+function setNotice(el,msg){
+  if(msg){el.textContent=msg;el.classList.add('show');}
+  else{el.textContent='';el.classList.remove('show');}
+}
+
+function syncFromSlider(key){
+  const f=fields[key];
+  f.num.value = f.el.value;
+  f.amt.textContent = fmt(+f.el.value);
+}
+
+function syncFromNumber(key){
+  const f=fields[key];
+  let raw = f.num.value.replace(/[^0-9\-]/g,'');
+  let v = raw==='' ? 0 : parseInt(raw,10);
+  if(isNaN(v)) v = 0;
+
+  let msg = '';
+  const absoluteMin = key==='hp' ? -200000 : f.min;
+  if(v > HARD_CAP){ v = HARD_CAP; msg = `That's beyond what this classroom demo models — capped at ${fmt(HARD_CAP)}.`; }
+  if(v < absoluteMin){ v = absoluteMin; msg = key==='hp' ? `Tax law caps a house‑property loss you can set off at ₹2,00,000 a year — capped here.` : `This head can't sensibly go below ${fmt(absoluteMin)} — capped.`; }
+
+  const sliderVal = clampSafe(v, f.min, f.max);
+  f.el.value = sliderVal;
+  f.num.value = v;
+  f.amt.textContent = fmt(v);
+  setNotice(f.notice, v>f.max ? `Slider maxes out for display, but ${fmt(v)} is still being used in the calculation.` : msg);
+  return v;
+}
+
+// current true values (may exceed slider max if typed)
+let trueVal = {salary:800000,hp:-80000,cg:50000,os:20000,ap:60000};
+
+function readAll(){
+  trueVal.salary = clampSafe(+fields.salary.num.value,0,HARD_CAP);
+  trueVal.hp = clampSafe(+fields.hp.num.value,-200000,HARD_CAP);
+  trueVal.cg = clampSafe(+fields.cg.num.value,0,HARD_CAP);
+  trueVal.os = clampSafe(+fields.os.num.value,0,HARD_CAP);
+  trueVal.ap = clampSafe(+fields.ap.num.value,0,HARD_CAP);
+}
+
+function slabTax(income){
+  const thresholds=[400000,800000,1200000,1600000,2000000,2400000,Infinity];
+  const rates=[0,.05,.10,.15,.20,.25,.30];
+  let tax=0, prev=0;
+  for(let i=0;i<thresholds.length;i++){
+    const upper=thresholds[i];
+    const slice=Math.min(income,upper)-prev;
+    if(slice>0) tax+=slice*rates[i];
+    prev=upper;
+    if(income<=upper) break;
+  }
+  return tax;
+}
+
+function update(){
+  readAll();
+
+  // gentle business-sense checks
+  let globalMsg='';
+  const salaryPlusAP = trueVal.salary + trueVal.ap;
+  if(trueVal.ap > 0 && trueVal.salary===0){
+    globalMsg = 'Perquisites usually ride on top of a salary — with ₹0 salary, the standard deduction has nothing to apply to.';
+  } else if(trueVal.ap > trueVal.salary*3 && trueVal.salary>0){
+    globalMsg = "Perquisites worth more than 3× salary would be unusual for a real payslip — but here's the math anyway.";
+  }
+
+  const totalIncome = trueVal.salary + trueVal.hp + trueVal.cg + trueVal.os + trueVal.ap;
+
+  if(totalIncome < 0){
+    globalMsg = `Total income works out negative — in reality this loss carries forward to future years rather than producing a refund. Tax is shown as ₹0.`;
+  }
+
+  const deduction = salaryPlusAP>0 ? Math.min(75000, salaryPlusAP) : 0;
+  const netTaxable = totalIncome - deduction;
+  const taxableForCalc = Math.max(0, netTaxable);
+
+  const preRebateTax = slabTax(taxableForCalc);
+  let tax;
+  if(taxableForCalc<=1200000){
+    tax = Math.max(0, preRebateTax - Math.min(preRebateTax,60000));
+  } else {
+    tax = Math.min(preRebateTax, taxableForCalc-1200000); // marginal relief
+  }
+  const cess = tax*0.04;
+  const totalTax = tax+cess;
+  const takeHome = totalIncome - totalTax;
+
+  // --- render stats ---
+  $('totalIncome').textContent = fmt(totalIncome);
+  $('totalIncomeFormula').innerHTML = `<b>Total Income</b> = Salary (${fmt(trueVal.salary)}) + House Property (${fmt(trueVal.hp)}) + Capital Gains (${fmt(trueVal.cg)}) + Other Sources (${fmt(trueVal.os)}) + Allowances/Perquisites (${fmt(trueVal.ap)})`;
+
+  $('deduction').textContent = fmt(deduction);
+  $('deductionFormula').innerHTML = salaryPlusAP>0
+    ? `<b>Standard Deduction</b> = lower of ₹75,000 or Salary+Perquisites (${fmt(salaryPlusAP)}). New regime drops HRA, 80C, LTA etc.`
+    : `No Salary or Perquisites income, so no standard deduction applies.`;
+
+  $('netTaxable').textContent = fmt(netTaxable);
+  $('netTaxableFormula').innerHTML = `<b>Net Taxable Income</b> = Total Income − Deductions = ${fmt(totalIncome)} − ${fmt(deduction)}`;
+
+  const taxEl = $('taxPayable');
+  taxEl.textContent = fmt(totalTax);
+  taxEl.classList.toggle('zero', totalTax===0);
+  $('taxFormula').innerHTML = taxableForCalc<=1200000
+    ? `Slab tax on ${fmt(taxableForCalc)} works out to ${fmt(preRebateTax)}, but Section 87A rebate (up to ₹60,000) wipes it out entirely since taxable income ≤ ₹12,00,000.`
+    : `Slab tax = ${fmt(preRebateTax)}. Marginal relief limits it to ${fmt(tax)} (the amount by which income exceeds ₹12,00,000), then +4% cess = ${fmt(totalTax)}.`;
+
+  setNotice($('globalNotice'), globalMsg);
+
+  // --- reflective question ---
+  const effRate = totalIncome>0 ? (totalTax/totalIncome*100) : 0;
+  let q;
+  if(totalIncome<=0){
+    q = `Total income here is ${fmt(totalIncome)}. What real situation produces a negative total income — and should the "tax" on it really be ₹0, or is something else going on?`;
+  } else if(netTaxable<=1200000){
+    q = `Tax payable is ₹0, even though the slab formula alone would have charged ${fmt(preRebateTax)}. If this taxpayer's salary rose by ₹1,00,000, would their tax still be ₹0? Nudge the Salary slider past the point where Net Taxable Income crosses ₹12,00,000 and see what happens to the tax — is the jump gradual or sudden?`;
+  } else {
+    q = `This taxpayer keeps ${fmt(takeHome)} of ${fmt(totalIncome)} — an effective rate of about ${effRate.toFixed(1)}%. Compare that to the 30% top slab rate: why is the effective rate so much lower than the highest slab they fall into?`;
+  }
+  $('reflectQ').textContent = q;
+
+  // --- charts ---
+  drawCompChart([
+    {label:'Salary',v:trueVal.salary,c:'#A2791F'},
+    {label:'House Prop.',v:trueVal.hp,c:'#2E6A66'},
+    {label:'Cap. Gains',v:trueVal.cg,c:'#7A4C10'},
+    {label:'Other Src.',v:trueVal.os,c:'#5B6473'},
+    {label:'Allow./Perq.',v:trueVal.ap,c:'#A5432A'},
+  ]);
+  drawTaxChart(Math.max(totalIncome,1), Math.max(totalTax,0), takeHome);
+
+  // seal
+  $('seal').innerHTML = sealSVG(totalTax===0 && totalIncome>0);
+}
+
+function drawCompChart(items){
+  const svg=$('compChart');
+  const maxAbs = Math.max(1,...items.map(i=>Math.abs(i.v)));
+  const barH=20, gap=10, left=98, w=200;
+  let html='';
+  items.forEach((it,i)=>{
+    const y=i*(barH+gap)+6;
+    const bw = Math.abs(it.v)/maxAbs*w;
+    const x = it.v<0 ? left-bw : left;
+    html+=`<text x="${left-8}" y="${y+barH/2+4}" font-size="10" text-anchor="end" fill="#5B6473">${it.label}</text>`;
+    html+=`<rect x="${x}" y="${y}" width="${Math.max(bw,1.5)}" height="${barH}" rx="4" fill="${it.c}" opacity="0.9"/>`;
+    html+=`<text x="${left+w+6}" y="${y+barH/2+4}" font-size="10" fill="#20293A">${fmt(it.v)}</text>`;
+  });
+  svg.innerHTML = html;
+}
+
+function drawTaxChart(total, tax, takeHome){
+  const svg=$('taxChart');
+  const w=300, h=26, x0=10, y0=14;
+  const taxPct = Math.max(0,Math.min(1, tax/total));
+  const taxW = w*taxPct;
+  let html = `<rect x="${x0}" y="${y0}" width="${w}" height="${h}" rx="6" fill="#2E6A66" opacity="0.85"/>`;
+  if(taxW>0.5) html += `<rect x="${x0}" y="${y0}" width="${taxW}" height="${h}" rx="6" fill="#A5432A"/>`;
+  html += `<text x="${x0}" y="${y0+h+16}" font-size="10" fill="#A5432A">■ Tax ${fmt(tax)}</text>`;
+  html += `<text x="${x0+130}" y="${y0+h+16}" font-size="10" fill="#2E6A66">■ Take‑home ${fmt(takeHome)}</text>`;
+  svg.innerHTML = html;
+}
+
+function sealSVG(zeroTax){
+  const col = zeroTax ? '#2E6A66' : '#A5432A';
+  const txt = zeroTax ? 'NIL TAX' : 'ASSESSED';
+  return `<svg viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="44" fill="none" stroke="${col}" stroke-width="3" stroke-dasharray="4 3" opacity="0.8"/>
+    <circle cx="50" cy="50" r="34" fill="none" stroke="${col}" stroke-width="2" opacity="0.6"/>
+    <text x="50" y="46" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="700" fill="${col}">${txt}</text>
+    <text x="50" y="60" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="${col}">NEW REGIME</text>
+  </svg>`;
+}
+
+// wire up events
+Object.keys(fields).forEach(key=>{
+  const f=fields[key];
+  f.el.addEventListener('input', ()=>{ syncFromSlider(key); update(); });
+  f.num.addEventListener('change', ()=>{ syncFromNumber(key); update(); });
+  f.num.addEventListener('blur', ()=>{ syncFromNumber(key); update(); });
+});
+
+$('scenarioBtn').addEventListener('click', ()=>{
+  const scenario = {salary:800000,hp:-80000,cg:50000,os:20000,ap:60000};
+  Object.keys(scenario).forEach(key=>{
+    fields[key].el.value = clampSafe(scenario[key], fields[key].min, fields[key].max);
+    fields[key].num.value = scenario[key];
+    syncFromSlider(key);
+  });
+  update();
+  $('seal').style.transform='rotate(4deg) scale(1.08)';
+  setTimeout(()=>{$('seal').style.transform='rotate(-8deg) scale(1)';},350);
+});
+
+// init
+Object.keys(fields).forEach(key=>syncFromSlider(key));
+update();
+</script>
+</body>
+</html>
